@@ -4,7 +4,7 @@ from decouple import config
 from sheet_service import create_service
 
 def con_postgres(dbname='geonode_data', user='sa_geonode'):
-
+ 
     return psycopg2.connect(f"dbname={config('dbname')} user={config('user')} host={config('host')} password={config('password')} port={config('port')}")
 
 
@@ -21,13 +21,21 @@ def to_update(df):
     return df.loc[selection]
 
 def insert_database(df):
-    tabela = to_update(df)
-    if tabela.empty:
+    table = to_update(df)
+    if table.empty:
         print('Sem novos updates para o banco!')
     else:
-
-        print('inserindo dados')
-        print(tabela)
+        print(f'Necessidade de inserir dados em {len(table)} linhas com alterações')
+        print(table)
+        conn = con_postgres()
+        cur = conn.cursor()
+        for index, row in table.iterrows():
+            sql = f"update territorio.v_propriedades_planet set tipo='{row[4]}' where id_pk={row[0]}"
+            print(sql)
+            cur.execute(sql)
+            conn.commit()
+        cur.close()
+        
     return
 
 
